@@ -1,0 +1,11 @@
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.eim
+data/frames/
+.env
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,5 @@
+name: UNO Q Robocar
+description: Control a Hiwonder miniAuto from UNO Q with a button-started movement routine.
+ports: []
+bricks: []
+icon: "🚗"
