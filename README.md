@@ -4,9 +4,6 @@ Qualcomm Hackathon project: a vision-guided soccer robot on Arduino UNO Q. Finds
 
 A vision-guided robot car built on the **Arduino UNO Q** and a **Hiwonder miniAuto** chassis. Press the camera's BOOT button and the robot searches for a ball, centers it, approaches, and pushes it toward the goal.
 
-**Team:** [names]  
-**Event:** [hackathon name, date]
-
 ## How it works
 
 ```
