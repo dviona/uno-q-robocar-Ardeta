@@ -1,120 +1,76 @@
-Qualcomm Hackathon project: a vision-guided soccer robot on Arduino UNO Q. Finds the ball, lines up with the goal, and pushes. Built by Arja, Debbie, Tavish
+# Ardeta — UNO Q Robocar
 
-# UNO Q Robocar
+Vision-guided ball approach and goal-push attempts on Arduino UNO Q and the Hiwonder miniAuto chassis. Built by **Arja Sadhukhan (@coding-jedi-ninja), Tavish Hookoom (@tavishh), and Debbie Viona (@dviona)**.
 
-A vision-guided robot car built on the **Arduino UNO Q** and a **Hiwonder miniAuto** chassis. Press the camera's BOOT button and the robot searches for a ball, centers it, approaches, and pushes it toward the goal.
+This branch preserves the application exported from the event robot on October 24, 2026, including its calibrated runtime settings and both Edge Impulse model versions. Application source matches the export; generated Python bytecode is excluded. `export-manifest.json` records the source-file Git blob hashes. No scoring success or model accuracy is asserted by this source import.
 
-## How it works
+## Application layout
 
+```text
+app.yaml
+python/
+  main.py             App Lab entry point and BOOT-controlled lifecycle
+  autonomy.py         MJPEG reader, HSV / Edge Impulse detection, decision loop
+  config.json         exported mode, model, direction mapping and tuning
+  robot_client.py     Bridge motor/sensor client
+  requirements.txt    exported Python dependencies
+  *.eim               v1 and v2 Linux aarch64 executable model exports
+sketch/
+  sketch.ino          MCU motor control, sensors, button and timed stops
+  sketch.yaml         exported sketch build profile
+camera/               separately flashed ESP32-S3 camera firmware
+scripts/flash.sh       terminal deployment helper
+Makefile
 ```
-ESP32-S3 camera --MJPEG over Wi-Fi--> UNO Q Python (MPU): detect + decide
-                                              |
-                                        Arduino Bridge
-                                              v
-                                   UNO Q sketch (MCU): motors, sensors, timed stops
-```
 
-- **Camera:** streams 320x240 MJPEG at `http://192.168.5.1:81/stream`.
-- **Python (Linux MPU):** reads frames, detects the ball (and goal), and picks the next move.
-- **Arduino sketch (MCU):** drives the motors and enforces timed stops.
-- **Bridge:** carries commands such as `drive`, `stop` and `read_sensors` between the two.
+The camera, packaging/deployment helpers and starter reference documents are retained from this repository's existing main branch. The application files and models come from the final App Lab export. The camera firmware is a supplied reference, not a readback of the event camera.
 
-### Behavior (`python/main.py`)
+## Run on UNO Q
 
-Each cycle: take a fresh frame, choose one short action, look again.
+1. Raise the wheels and keep physical motor-power disconnection accessible. Connect UNO Q to your computer by USB.
+2. Run `make package` from the repository root. Import `build/uno-q-robocar.zip` through Apps / My Apps in Arduino App Lab and select UNO Q.
+3. Run while UNO Q still has Internet to install `python/requirements.txt`. The export declares `edge-impulse-linux`; image decoding also imports OpenCV (`cv2`) and NumPy, which must be available in the app environment. Resolve missing packages before switching Wi-Fi.
+4. Connect **UNO Q Linux itself** to the camera access point using the supplied credentials. Keep USB connected: the camera network has no Internet. Stream URL is `http://192.168.5.1:81/stream`, 320×240. Close any browser preview before Python opens the single-client stream.
+5. Start the application in App Lab. A short press/release of the camera BOOT button starts the routine after countdown; another short press stops it. App Lab Run launches the application but does not itself start driving.
 
-| State | What it does |
+**Exported default mode is `score`.** For a new kit, change `mode` to `observe` before pressing BOOT for stationary vision checks, then use `motion` for one-pulse direction checks. Verify the exported calibration against the actual chassis before returning to `score`.
+
+Optional terminal deployment: `make devices`, `make flash`, `make logs`, and `make stop`. Use `SERIAL=...` with multiple boards. Flash replaces the terminal-managed Python and sketch source folders; save board-only edits first.
+
+## Exported configuration
+
+| Setting | Event export value |
 | --- | --- |
-| SEARCH | Short rotation pulses until the ball is seen; gives up after a bounded number of pulses |
-| ALIGN | Rotates toward the ball until it is inside the center dead band |
-| APPROACH | Short forward pulses until the ball is close (image position, size, or ultrasonic) |
-| PUSH | Forward pulses toward the goal, bounded by a pulse limit; optional strafing to line the ball up with the goal |
+| Detector / selected model | `edge_impulse` / v2 `.eim` |
+| Confidence threshold | 0.5 |
+| Run limit | 120 seconds |
+| Approach / near speed | 140 / 120 |
+| Approach or lateral pulse | 220 ms |
+| Push pulse / maximum pushes | 250 ms / 5 |
+| Center band | 0.10 normalized image width |
+| FOMO close-ball cue | bottom of merged detection at normalized y ≥ 0.65 |
+| Manual starting alignment | `prealigned_goal: true` |
+| Unknown ultrasonic permitted | `allow_unknown_ultrasonic: true` |
+| Valid-distance cutoff | 80 mm |
+| Missed-detection tolerance | 8 additional observations while stationary |
+| Direction calibration | logical forward↔backward and left↔right reversed |
 
-Safety behavior: a stalled camera feed, a ball that is never found, the run time limit, or the BOOT button all end the run.
+All values are editable in `python/config.json`. Edit the imported copy in App Lab and restart, or repackage/deploy local changes. Imported apps are copies of the ZIP, not live links to this checkout.
 
-## Repository layout
+## Perception and actions
 
-```
-robocar/
-  app.yaml
-  Makefile
-  scripts/flash.sh
-  python/
-    main.py            state machine (our code)
-    detector.py        HSV colour detector + optional Edge Impulse model (our code)
-    camera.py          background MJPEG reader that keeps only the newest frame (our code)
-    snap.py            saves frames + detections for tuning (our code)
-    robot_client.py    motor/sensor API over Bridge (starter)
-    requirements.txt
-    *.eim              Edge Impulse model, if used (not committed; see below)
-  sketch/
-    sketch.ino         motor control, sensors, button, timed stops (starter)
-    sketch.yaml
-  camera/HiwonderCamStream/HiwonderCamStream.ino   camera firmware (starter, flashed separately)
-```
+The background reader continuously drains MJPEG and retains one decoded frame. After a short movement, the next decision requires a frame arriving after the settling interval. The Edge Impulse adapter loads the configured Linux aarch64 `.eim`, uses the Studio preprocessing helper, and maps `soccerball` and `goal` labels. It joins nearby FOMO cells into detections and rejects multiple qualifying blobs as ambiguous. Proximity uses the ball's vertical image position; the alternative HSV detector uses apparent width.
 
-## Setup
+The loop laterally centers a detected ball, approaches with bounded forward pulses, and pushes when close. It does **not** search by rotating or plan a path around the ball. With manual alignment enabled, place the robot behind the ball in a clear lane into the goal. With manual alignment disabled, a goal detection and a compatible horizontal alignment are required. Missing ball detections cause stationary retries up to the configured limit; exhausted retries, camera errors, expired arrivals, valid insufficient-clearance readings, BOOT stop, run limit or push limit end the run.
 
-You need Arduino App Lab, GNU Make, `zip`, and Android Platform-Tools (`adb`), plus a data-capable USB-C cable.
+## Models and limitations
 
-1. Connect the UNO Q by USB and complete the App Lab board setup.
-2. **While the board still has internet**, install the Python dependencies (`python/requirements.txt`). The camera network has no internet.
-3. Join the camera's Wi-Fi **from the UNO Q's Linux side**. SSID and password are supplied with the robot.
-4. Keep the motor-power disconnect within reach and the wheels raised while testing.
+Both model versions are included as executable Linux aarch64 binaries; v2 is selected. They are not runnable on macOS. The original training project, labeled dataset, and evaluation report were not included in the export, so these binaries reproduce inference but not training. Do not infer training-data provenance or accuracy from the filenames.
 
-## Run
+A completed attempt is not automatic proof of a goal. Unknown ultrasonic readings are allowed in the exported settings, and a forward sensor does not protect sideways motion. Camera arrival timestamps do not establish image capture freshness. The MCU timer bounds motor output only while its loop is serviced; BOOT is a software stop. Keep a physical disconnect available.
 
-```sh
-make devices     # confirm the board is visible
-make flash       # package, deploy, compile, upload, start
-make logs        # follow Python output
-make monitor     # MCU serial monitor
-make stop        # stop the app
-```
+## Validation and credits
 
-Short-press the camera **BOOT** button to start a run, and short-press it again to stop. `make flash` replaces `python/` and `sketch/` on the board, so edit locally and re-flash instead of editing in App Lab.
+Source import validation: ZIP integrity, Python syntax, JSON parsing, configured model presence, source/model blob hashes, executable modes and App Lab package layout. No physical robot or camera was available for this import; the aarch64 models were not executed on the development Mac.
 
-## Tuning
-
-Calibrate with the wheels raised first, then on the floor. Values are at the top of `python/main.py` (`TUNING` block) and `python/detector.py`.
-
-| Setting | What to check |
-| --- | --- |
-| `HSV_RANGES` (`detector.py`) | Ball colour under the venue lighting; use `snap.py` frames |
-| `ROTATE_RIGHT_IS_CLOCKWISE` | Flip if turns go the wrong way |
-| `TURN_SPEED`, `FWD_SPEED`, `PUSH_SPEED` | Lowest speeds that move reliably on this floor and battery |
-| `*_MS` pulse lengths | Distance/angle produced by one pulse |
-| `CLOSE_CY`, `CLOSE_SIZE`, `CLOSE_MM` | When "close enough to push" triggers |
-| `ALIGN_GOAL`, `GOAL_TOL_PX` | Goal alignment (needs the trained model) |
-
-**Calibrated values for our robot:** [fill in after testing: speeds, pulse lengths, turn direction, HSV range, battery condition]
-
-Tune the detector with the robot stationary:
-
-```sh
-python3 snap.py   # saves annotated frames to data/frames/
-```
-
-## Edge Impulse model (optional)
-
-Train a FOMO object detector with classes `soccerball` and `goal` (96x96 input), deploy with target **Arduino UNO Q**, and place the downloaded `.eim` in `python/`. `detector.py` uses it automatically when present and falls back to the colour detector otherwise. The `.eim` is generated from our own project, so it is shared outside git.
-
-## Status
-
-- [ ] Starter runs; BOOT starts and stops the 200 ms test pulse
-- [ ] Camera stream read from the UNO Q
-- [ ] Motor directions and speeds calibrated
-- [ ] Ball detected reliably (left, center, right, near, far, absent)
-- [ ] Approach working end to end
-- [ ] Push / goal attempt working
-- [ ] Backup video recorded
-
-## Safety
-
-The BOOT button is a software stop, not a power cutoff. Keep the physical motor-power disconnect accessible, keep movements bounded (never use duration `0` from Python), and do not enable the inherited `F|1|&` obstacle-avoidance demo.
-
-## Credits
-
-- Starter code, firmware, and track guide: hackathon organizers (Arduino UNO Q robocar track)
-- Detection, camera reader, and state machine: [team names]
-- Edge Impulse project/data: [credit the source if you cloned the public project]
+Starter code, motor client, MCU firmware and camera firmware: hackout organizers / [uno-q-hackout](https://github.com/aaishikasb/uno-q-hackout). Model inference: Edge Impulse Linux SDK; images: OpenCV and NumPy. Controller development included OpenAI Codex assistance. See `STARTER_README.md` for the supplied hardware and API reference.

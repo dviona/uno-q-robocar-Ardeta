@@ -35,3 +35,4 @@ rm -rf "$app/python" "$app/sketch"
 mv "$stage/app.yaml" "$app/app.yaml"
 mv "$stage/python" "$stage/sketch" "$app/"
 arduino-app-cli app start "$app"
+
