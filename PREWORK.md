@@ -64,3 +64,4 @@ Use these as lookups during this track; you do not need to read every page end t
 | [Debian Linux basics for UNO Q](https://docs.arduino.cc/tutorials/uno-q/debian-guide/) | The Linux environment where camera networking, Python packages, and your detector run |
 | [Blink Without Delay](https://docs.arduino.cc/built-in-examples/digital/BlinkWithoutDelay/) | Checking elapsed time without suspending the whole sketch with a long delay |
 | [I2C protocol and the Wire library](https://docs.arduino.cc/learn/communication/wire/) | Addressed communication between the MCU and attached devices; use this kit's wiring and addresses from the [hardware reference](README.md#hardware-and-camera-reference) |
+

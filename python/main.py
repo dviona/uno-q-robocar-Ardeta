@@ -1,19 +1,26 @@
 from arduino.app_utils import App
-from robot_client import MiniAutoRobot
+from robot_client import MiniAutoRobot, ProgramStopped
+from autonomy import load_config, run_attempt
 
 robot = MiniAutoRobot()
 
 
-def motion_check() -> None:
-    # Start with raised wheels; calibrate this short pulse on each chassis.
-    robot.drive("forward", speed=100, ms=200)
+def routine():
+    try:
+        run_attempt(robot, load_config())
+    except ProgramStopped:
+        raise
+    except Exception as exc:
+        robot.stop()
+        print(f"[STOP] {type(exc).__name__}: {exc}", flush=True)
 
 
 try:
     robot.stop()
+    config = load_config()
     print(f"health  : {robot.health()}")
     print(f"sensors : {robot.read_sensors()}")
-    print("Raise the wheels, then short-press the camera BOOT button for one motion check.")
-    App.run(user_loop=lambda: robot.run_program(motion_check))
+    print(f"Mode: {config['mode']}. Short-press camera BOOT to start/stop.")
+    App.run(user_loop=lambda: robot.run_program(routine))
 finally:
     robot.stop()

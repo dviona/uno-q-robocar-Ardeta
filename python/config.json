@@ -1,0 +1,39 @@
+{
+  "mode": "score",
+  "detector": "edge_impulse",
+  "model_path": "uno-q-hackout1-linux-aarch64-v2-impulse-#1.eim",
+  "min_confidence": 0.5,
+  "motion_calibrated": true,
+  "camera_url": "http://192.168.5.1:81/stream",
+  "run_seconds": 120,
+  "frame_timeout": 3,
+  "max_frame_age": 0.4,
+  "settle_seconds": 0.2,
+  "speed": 140,
+  "near_speed": 120,
+  "pulse_ms": 220,
+  "push_ms": 250,
+  "max_pushes": 5,
+  "center_band": 0.1,
+  "goal_tolerance": 0.15,
+  "close_ball_width": 0.28,
+  "close_ball_y": 0.65,
+  "max_missed_frames": 8,
+  "minimum_clearance_mm": 80,
+  "allow_unknown_ultrasonic": true,
+  "prealigned_goal": true,
+  "motion_direction": "forward",
+  "direction_map": {"forward": "backward", "backward": "forward", "left": "right", "right": "left"},
+  "ball": {
+    "ranges": [[[5, 110, 70], [25, 255, 255]]],
+    "min_area": 80,
+    "min_circularity": 0.55,
+    "min_fill": 0.45
+  },
+  "goal": {
+    "ranges": [[[90, 100, 60], [130, 255, 255]]],
+    "min_area": 200,
+    "min_circularity": 0.0,
+    "min_fill": 0.35
+  }
+}

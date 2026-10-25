@@ -1,5 +1,5 @@
 name: UNO Q Robocar
-description: Control a Hiwonder miniAuto from UNO Q with a button-started movement routine.
+description: Calibrate camera perception and attempt an aligned ball push using bounded movements.
 ports: []
 bricks: []
-icon: "🚗"
+icon: 🚗

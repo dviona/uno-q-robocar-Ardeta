@@ -1,0 +1,65 @@
+{
+  "source": "Final Arduino App Lab export app.zip, October 24, 2026",
+  "files": [
+    {
+      "path": "app.yaml",
+      "size": 151,
+      "sha": "d87635fa397894a26b1c35b6a873e59396a87a2b",
+      "mode": "100644"
+    },
+    {
+      "path": "python/autonomy.py",
+      "size": 16145,
+      "sha": "4b5aa668722c7d2f4482687823e1433abd928489",
+      "mode": "100644"
+    },
+    {
+      "path": "python/config.json",
+      "size": 1030,
+      "sha": "28a10ab5e932c3499983d872bd311711f8999d16",
+      "mode": "100644"
+    },
+    {
+      "path": "python/main.py",
+      "size": 684,
+      "sha": "00a7b2a7cbe5f3cadc06715bfdf54bce82d14c5c",
+      "mode": "100644"
+    },
+    {
+      "path": "python/requirements.txt",
+      "size": 19,
+      "sha": "ec673d53a91df92c3fde96ab5abc1032976577e9",
+      "mode": "100644"
+    },
+    {
+      "path": "python/robot_client.py",
+      "size": 2691,
+      "sha": "795bfc0b78ef3c6029e2178d8e3339746abc05dc",
+      "mode": "100644"
+    },
+    {
+      "path": "python/uno-q-hackout1-linux-aarch64-v1-impulse-#1.eim",
+      "size": 13625768,
+      "sha": "d841286397311d7574478e567535a59c1df3b81c",
+      "mode": "100755"
+    },
+    {
+      "path": "python/uno-q-hackout1-linux-aarch64-v2-impulse-#1.eim",
+      "size": 13625768,
+      "sha": "ae2030946e835aea61d7e58834eeb036a0f012da",
+      "mode": "100755"
+    },
+    {
+      "path": "sketch/sketch.ino",
+      "size": 33589,
+      "sha": "58aa2f2589ba42f33533ff8362e5d51fabe79638",
+      "mode": "100644"
+    },
+    {
+      "path": "sketch/sketch.yaml",
+      "size": 261,
+      "sha": "cf2c088e8aa77c5c9d4bd2b23539293433421bfa",
+      "mode": "100644"
+    }
+  ]
+}
